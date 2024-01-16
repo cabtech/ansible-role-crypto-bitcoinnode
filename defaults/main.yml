@@ -1,0 +1,25 @@
+---
+# --------------------------------
+
+bitcoin_arch: x86_64
+bitcoin_archive: "bitcoin-{{ bitcoin_version }}-{{ bitcoin_arch }}-{{ bitcoin_os }}-gnu.tar.gz"
+bitcoin_checksum: 376194f06596ecfa40331167c39bc70c355f960280bd2a645fdbf18f66527397
+bitcoin_mirror: "https://bitcoin.org/"
+bitcoin_opt_dir: /opt
+bitcoin_os: linux
+bitcoin_run_dir: /var/lib/bitcoin
+bitcoin_svc_enabled: true
+bitcoin_svc_name: bitcoin
+bitcoin_svc_state: started
+bitcoin_tmp_dir: /var/tmp/bitcoin/downloads
+bitcoin_url: "{{ bitcoin_mirror }}/bin/bitcoin-core-{{ bitcoin_version }}/{{ bitcoin_archive }}"
+bitcoin_user: satoshi
+bitcoin_version: 25.0
+
+bitcoin_dirs:
+- {group: root, mode: "0755", owner: root, path: "{{ bitcoin_tmp_dir }}"}
+- {group: "{{ bitcoin_user }}", mode: "0755", owner: "{{ bitcoin_user }}", path: "{{ bitcoin_opt_dir }}"}
+- {group: "{{ bitcoin_user }}", mode: "0755", owner: "{{ bitcoin_user }}", path: "{{ bitcoin_run_dir }}"}
+
+# --------------------------------
+...

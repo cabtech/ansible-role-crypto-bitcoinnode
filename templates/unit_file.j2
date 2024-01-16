@@ -1,0 +1,22 @@
+# MANAGED_BY_ANSIBLE
+# --------------------------------
+
+[Unit]
+Description=BitcoinNode
+Documentation=https://bitcoin.org/
+After=network.target
+ 
+[Service]
+ExecStart=/bin/bash -c "{{ bitcoin_opt_dir }}/bitcoin/bin/bitcoind -daemon"
+ExecStop=/bin/bash -c "{{ bitcoin_opt_dir }}/bitcoin/bin/bitcoin-cli stop"
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=0
+Type=forking
+User={{ bitcoin_user }}
+ 
+[Install]
+WantedBy=default.target
+
+# --------------------------------
+# end

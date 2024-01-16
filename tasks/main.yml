@@ -1,0 +1,100 @@
+---
+# --------------------------------
+
+- name: "Runtime group"
+  ansible.builtin.group:
+    name: "{{ bitcoin_user }}"
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+- name: "Runtime user"
+  ansible.builtin.user:
+    create_home: true
+    group: "{{ bitcoin_user }}"
+    name: "{{ bitcoin_user }}"
+    state: present
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+- name: "Create directories"
+  ansible.builtin.file:
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    path: "{{ item.path }}"
+    state: directory
+  loop: "{{ bitcoin_dirs }}"
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+# --------------------------------
+
+- name: "Download archive"
+  ansible.builtin.get_url:
+    dest: "{{ bitcoin_tmp_dir }}/{{ bitcoin_archive }}"
+    mode: "0644"
+    url: "{{ bitcoin_url }}"
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+- name: "Unarchive"
+  ansible.builtin.unarchive:
+    creates: "{{ bitcoin_opt_dir }}/{{ bitcoin_archive }}"
+    dest: "{{ bitcoin_opt_dir }}"
+    remote_src: true
+    src: "{{ bitcoin_tmp_dir }}/{{ bitcoin_archive }}"
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+- name: "Symlink to versioned directory"
+  ansible.builtin.file:
+    dest: "{{ bitcoin_opt_dir }}/bitcoin"
+    src: "{{ bitcoin_opt_dir }}/bitcoin-{{ bitcoin_version }}"
+    state: link
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+- name: "Add config dir"
+  ansible.builtin.file:
+    group: "{{ bitcoin_user }}"
+    mode: "0700"
+    owner: "{{ bitcoin_user }}"
+    path: "~{{ bitcoin_user }}/.bitcoin"
+    state: directory
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+- name: "Render config file"
+  ansible.builtin.template:
+    dest: "~{{ bitcoin_user }}/.bitcoin/bitcoin.conf"
+    group: "{{ bitcoin_user }}"
+    mode: "0644"
+    owner: "{{ bitcoin_user }}"
+    src: bitcoin.conf.j2
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+# --------------------------------
+
+- name: "Render Systemd unit file"
+  ansible.builtin.template:
+    dest: /etc/systemd/system/{{ bitcoin_svc_name }}.service
+    group: root
+    mode: "0644"
+    owner: root
+    src: unit_file.j2
+  register: reg_svc_bitcoin
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+- name: "Set up Systemd service"
+  ansible.builtin.systemd:
+    daemon_reload: "{{ reg_svc_bitcoin is changed }}"
+    enabled: "{{ bitcoin_svc_enabled }}"
+    name: "{{ bitcoin_svc_name }}"
+    state: "{{ bitcoin_svc_state }}"
+  become: true
+  tags: ["ct-bitcoinnode"]
+
+# --------------------------------
+...
